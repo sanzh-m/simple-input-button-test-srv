@@ -1,5 +1,6 @@
 import StatusCodes from 'http-status-codes';
 import { Request, Response } from 'express';
+import {getName} from "../service/indexService";
 
 /**
  * Get all users.
@@ -9,5 +10,7 @@ import { Request, Response } from 'express';
  * @returns
  */
 export async function loginUser(req: Request, res: Response): Promise<void> {
-    res.status(StatusCodes.OK).json({message: 'hi'});
+    const {name} = req.body;
+    const exist = await getName(name);
+    res.status(StatusCodes.OK).json({success: exist});
 }

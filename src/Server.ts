@@ -1,3 +1,4 @@
+import * as bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import helmet from 'helmet';
@@ -8,10 +9,10 @@ import 'express-async-errors';
 
 import {rootRouter} from './routes';
 import logger from '@shared/Logger';
-
+import pgPromise from "pg-promise";
+import cors from "cors";
 const app = express();
-const { BAD_REQUEST } = StatusCodes;
-
+const {BAD_REQUEST} = StatusCodes;
 
 
 /************************************************************************************
@@ -19,7 +20,10 @@ const { BAD_REQUEST } = StatusCodes;
  ***********************************************************************************/
 
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+app.use(cors());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
 // Show routes called in console during development
@@ -46,3 +50,23 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 
 // Export express instance
 export default app;
+
+const dbConfig = {
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT != undefined ? parseInt(process.env.DB_PORT) : process.env.DB_PORT,
+    database: process.env.DB_DATABASE,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD
+};
+
+const initOptions = {
+    connect(client: { connectionParameters: any; }) {
+        const cp = client.connectionParameters;
+        logger.info('Connected to database:', cp.database);
+    }
+};
+
+const pgp = pgPromise(initOptions);
+const dbConn = pgp(dbConfig);
+
+export {dbConn};
